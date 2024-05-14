@@ -1,6 +1,16 @@
 const puppeteer = require("puppeteer");
 
 (async () => {
+  // Keywords to search
+  const keywords = [
+    "Estate Agent West Watford",
+    "Property Valuation Watford",
+    "Property Sales Watford",
+    "Independent Estate Agent Watford",
+  ];
+  // Business name to search
+  const businessName = "Coopers Estate Agents";
+
   // Launch a new browser instance
   const browser = await puppeteer.launch({ headless: false });
 
@@ -15,44 +25,40 @@ const puppeteer = require("puppeteer");
   // Click on the input element with ID 'qjZKOb'
   await page.click("#qjZKOb");
 
-  // Type 'Estate Agent Watford' in the input field and press Enter
-  await page.type("#qjZKOb", "Property Sales Watford", { delay: 100 }); // Adjust delay if necessary
-  await page.keyboard.press("Enter");
+  // Loop through each keyword
+  for (const keyword of keywords) {
+    // Type the keyword in the input field and press Enter
+    await page.type("#qjZKOb", keyword, { delay: 100 }); // Adjust delay if necessary
+    await page.keyboard.press("Enter");
 
-  // Wait for the search results to load
-  await page.waitForSelector(".rgnuSb.xYjf2e");
+    console.log("KEYWORD SEARCH FOR ->", keyword);
 
-  // Get the text content of all elements with class "rgnuSb xYjf2e"
-  const textArray = await page.evaluate(() => {
-    const textContainer = document.getElementsByClassName("rgnuSb xYjf2e");
-    const textArray = [];
-    for (let i = 0; i < textContainer.length; i++) {
-      const text = textContainer[i].textContent.trim();
-      textArray.push(text);
-    }
-    return textArray;
-  });
+    // Wait until elements with classes "rgnuSb" and "xYjf2e" are present
+    await page.waitForSelector(".rgnuSb.xYjf2e");
 
-  // Keyword to search
-  const keyword = "Coopers Estate Agents";
+    // Get the text content of all elements with class "rgnuSb xYjf2e"
+    const textArray = await page.evaluate(() => {
+      const textContainer = document.getElementsByClassName("rgnuSb xYjf2e");
+      const textArray = [];
+      for (let i = 0; i < textContainer.length; i++) {
+        const text = textContainer[i].textContent.trim();
+        textArray.push(text);
+      }
+      return textArray;
+    });
 
-  // Search for the keyword in the input field
-  const inputFieldValue = await page.$eval("#qjZKOb", (input) => input.value);
-  const keywordPositionInInput = inputFieldValue.includes(keyword)
-    ? "Input field"
-    : "Not found in input field";
+    console.log("TEXT ARRAY ->", textArray);
 
-  // Search for the keyword in the textArray
-  const position = textArray.findIndex((text) => text.includes(keyword));
+    // Search for the businessName in the textArray
+    const position = textArray.findIndex((text) => text.includes(businessName));
 
-  if (position !== -1) {
-    console.log(`${keyword}" -> ${position + 1}`);
-  } else {
-    console.log(`"${keyword}" not found!`);
+    console.log(
+      `Keyword: "${keyword}", Business Name: "${businessName}", Position: ${
+        position !== -1 ? position + 1 : "not found"
+      }`
+    );
   }
 
-  console.log(`Keyword "${keyword}" ${keywordPositionInInput}`);
-
   // Close the browser
-  await browser.close();
+  // await browser.close();
 })();
